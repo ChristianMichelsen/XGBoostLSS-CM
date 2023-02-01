@@ -1,22 +1,32 @@
 import pandas as pd
 import xgboost as xgb
-from xgboostlss.distributions import * 
-from xgboostlss.utils import *
+from xgboostlsscm.distributions import *
+from xgboostlsscm.utils import *
 import optuna
 from optuna.samplers import TPESampler
 import shap
 
 
-class xgboostlss:
+class xgboostlsscm:
     """
-    XGBoostLSS model class
+    XGBoostLSSCM model class
 
     """
 
-    def train(params, dtrain, dist, num_boost_round=10, evals=(),
-              maximize=False, early_stopping_rounds=None, evals_result=None,
-              verbose_eval=True, xgb_model=None, callbacks=None):
-        """Train a xgboostlss model with given parameters.
+    def train(
+        params,
+        dtrain,
+        dist,
+        num_boost_round=10,
+        evals=(),
+        maximize=False,
+        early_stopping_rounds=None,
+        evals_result=None,
+        verbose_eval=True,
+        xgb_model=None,
+        callbacks=None,
+    ):
+        """Train a xgboostlsscm model with given parameters.
 
         Parameters
         ----------
@@ -24,7 +34,7 @@ class xgboostlss:
             Booster params.
         dtrain : DMatrix
             Data to be trained.
-        dist: xgboostlss.distributions class
+        dist: xgboostlsscm.distributions class
             Specifies distributional assumption.
         num_boost_round: int
             Number of boosting iterations.
@@ -74,10 +84,12 @@ class xgboostlss:
                 [xgb.callback.LearningRateScheduler(custom_rates)]
         """
 
-        params_adj = {"objective": None,
-                      "base_score": 0,
-                      "num_class": dist.n_dist_param(),
-                      "disable_default_eval_metric": True}
+        params_adj = {
+            "objective": None,
+            "base_score": 0,
+            "num_class": dist.n_dist_param(),
+            "disable_default_eval_metric": True,
+        }
 
         params.update(params_adj)
 
@@ -86,26 +98,41 @@ class xgboostlss:
         base_margin = (np.ones(shape=(dtrain.num_row(), 1))) * dist.start_values
         dtrain.set_base_margin(base_margin.flatten())
 
-        bstLSS_train = xgb.train(params,
-                                 dtrain,
-                                 num_boost_round=num_boost_round,
-                                 evals=evals,
-                                 obj=dist.Dist_Objective,
-                                 feval=dist.Dist_Metric,
-                                 xgb_model=xgb_model,
-                                 callbacks=callbacks,
-                                 verbose_eval=verbose_eval,
-                                 evals_result=evals_result,
-                                 maximize=False,
-                                 early_stopping_rounds=early_stopping_rounds)
+        bstLSS_train = xgb.train(
+            params,
+            dtrain,
+            num_boost_round=num_boost_round,
+            evals=evals,
+            obj=dist.Dist_Objective,
+            feval=dist.Dist_Metric,
+            xgb_model=xgb_model,
+            callbacks=callbacks,
+            verbose_eval=verbose_eval,
+            evals_result=evals_result,
+            maximize=False,
+            early_stopping_rounds=early_stopping_rounds,
+        )
         return bstLSS_train
 
-
-
-    def cv(params, dtrain, dist, num_boost_round=10, nfold=3, stratified=False, folds=None,
-           maximize=False, early_stopping_rounds=None, fpreproc=None, as_pandas=True,
-           verbose_eval=None, show_stdv=True, seed=123, callbacks=None, shuffle=True):
-        """Function to cross-validate a xgboostlss model with given parameters.
+    def cv(
+        params,
+        dtrain,
+        dist,
+        num_boost_round=10,
+        nfold=3,
+        stratified=False,
+        folds=None,
+        maximize=False,
+        early_stopping_rounds=None,
+        fpreproc=None,
+        as_pandas=True,
+        verbose_eval=None,
+        show_stdv=True,
+        seed=123,
+        callbacks=None,
+        shuffle=True,
+    ):
+        """Function to cross-validate a xgboostlsscm model with given parameters.
 
         Parameters
         ----------
@@ -113,7 +140,7 @@ class xgboostlss:
             Booster params.
         dtrain : DMatrix
             Data to be trained.
-        dist: xgboostlss.distributions class
+        dist: xgboostlsscm.distributions class
             Specifies distributional assumption.
         num_boost_round : int
             Number of boosting iterations.
@@ -167,10 +194,12 @@ class xgboostlss:
         evaluation history : list(string)
         """
 
-        params_adj = {"objective": None,
-                      "base_score": 0,
-                      "num_class": dist.n_dist_param(),
-                      "disable_default_eval_metric": True}
+        params_adj = {
+            "objective": None,
+            "base_score": 0,
+            "num_class": dist.n_dist_param(),
+            "disable_default_eval_metric": True,
+        }
 
         params.update(params_adj)
 
@@ -179,30 +208,40 @@ class xgboostlss:
         base_margin = (np.ones(shape=(dtrain.num_row(), 1))) * dist.start_values
         dtrain.set_base_margin(base_margin.flatten())
 
-        bstLSS_cv = xgb.cv(params,
-                           dtrain,
-                           num_boost_round=num_boost_round,
-                           nfold=nfold,
-                           stratified=stratified,
-                           folds=folds,
-                           obj=dist.Dist_Objective,
-                           feval=dist.Dist_Metric,
-                           maximize=False,
-                           early_stopping_rounds=early_stopping_rounds,
-                           fpreproc=fpreproc,
-                           as_pandas=as_pandas,
-                           verbose_eval=verbose_eval,
-                           show_stdv=show_stdv,
-                           seed=seed,
-                           callbacks=callbacks,
-                           shuffle=shuffle)
+        bstLSS_cv = xgb.cv(
+            params,
+            dtrain,
+            num_boost_round=num_boost_round,
+            nfold=nfold,
+            stratified=stratified,
+            folds=folds,
+            obj=dist.Dist_Objective,
+            feval=dist.Dist_Metric,
+            maximize=False,
+            early_stopping_rounds=early_stopping_rounds,
+            fpreproc=fpreproc,
+            as_pandas=as_pandas,
+            verbose_eval=verbose_eval,
+            show_stdv=show_stdv,
+            seed=seed,
+            callbacks=callbacks,
+            shuffle=shuffle,
+        )
 
         return bstLSS_cv
 
-
-
-    def hyper_opt(params, dtrain, dist, num_boost_round=500, nfold=10, early_stopping_rounds=20,
-                  max_minutes=10, n_trials = None, study_name = "XGBoostLSS-HyperOpt", silence=False):
+    def hyper_opt(
+        params,
+        dtrain,
+        dist,
+        num_boost_round=500,
+        nfold=10,
+        early_stopping_rounds=20,
+        max_minutes=10,
+        n_trials=None,
+        study_name="XGBoostLSS-CM-HyperOpt",
+        silence=False,
+    ):
         """Function to tune hyperparameters using optuna.
 
         Parameters
@@ -211,7 +250,7 @@ class xgboostlss:
             Booster params in the form of "params_name": [min_val, max_val].
         dtrain : DMatrix
             Data to be trained.
-        dist: xgboostlss.distributions class
+        dist: xgboostlsscm.distributions class
             Specifies distributional assumption.
         num_boost_round : int
             Number of boosting iterations.
@@ -242,28 +281,47 @@ class xgboostlss:
 
             hyper_params = {
                 "booster": "gbtree",
-                "eta": trial.suggest_loguniform("eta", params["eta"][0], params["eta"][1]),
-                "max_depth": trial.suggest_int("max_depth", params["max_depth"][0], params["max_depth"][1]),
-                "gamma": trial.suggest_loguniform("gamma", params["gamma"][0], params["gamma"][1]),
-                "subsample": trial.suggest_loguniform("subsample", params["subsample"][0], params["subsample"][1]),
-                "colsample_bytree": trial.suggest_loguniform("colsample_bytree", params["colsample_bytree"][0], params["colsample_bytree"][1]),
-                "min_child_weight": trial.suggest_int("min_child_weight", params["min_child_weight"][0], params["min_child_weight"][1])
+                "eta": trial.suggest_loguniform(
+                    "eta", params["eta"][0], params["eta"][1]
+                ),
+                "max_depth": trial.suggest_int(
+                    "max_depth", params["max_depth"][0], params["max_depth"][1]
+                ),
+                "gamma": trial.suggest_loguniform(
+                    "gamma", params["gamma"][0], params["gamma"][1]
+                ),
+                "subsample": trial.suggest_loguniform(
+                    "subsample", params["subsample"][0], params["subsample"][1]
+                ),
+                "colsample_bytree": trial.suggest_loguniform(
+                    "colsample_bytree",
+                    params["colsample_bytree"][0],
+                    params["colsample_bytree"][1],
+                ),
+                "min_child_weight": trial.suggest_int(
+                    "min_child_weight",
+                    params["min_child_weight"][0],
+                    params["min_child_weight"][1],
+                ),
             }
 
-
             # Add pruning
-            pruning_callback = optuna.integration.XGBoostPruningCallback(trial, "test-NegLogLikelihood")
+            pruning_callback = optuna.integration.XGBoostPruningCallback(
+                trial, "test-NegLogLikelihood"
+            )
 
-            xgblss_param_tuning = xgboostlss.cv(hyper_params,
-                                                dtrain=dtrain,
-                                                dist=dist,
-                                                num_boost_round=num_boost_round,
-                                                nfold=nfold,
-                                                early_stopping_rounds=early_stopping_rounds,
-                                                callbacks=[pruning_callback],
-                                                seed=123,
-                                                verbose_eval=False,
-                                                maximize=False)
+            xgblss_param_tuning = xgboostlsscm.cv(
+                hyper_params,
+                dtrain=dtrain,
+                dist=dist,
+                num_boost_round=num_boost_round,
+                nfold=nfold,
+                early_stopping_rounds=early_stopping_rounds,
+                callbacks=[pruning_callback],
+                seed=123,
+                verbose_eval=False,
+                maximize=False,
+            )
 
             # Add opt_rounds as a trial attribute, accessible via study.trials_dataframe(). # https://github.com/optuna/optuna/issues/1169
             opt_rounds = xgblss_param_tuning["test-NegLogLikelihood-mean"].idxmin() + 1
@@ -274,14 +332,20 @@ class xgboostlss:
 
             return best_score
 
-
         if silence:
             optuna.logging.set_verbosity(optuna.logging.WARNING)
 
         sampler = TPESampler(seed=123)
         pruner = optuna.pruners.MedianPruner(n_startup_trials=10, n_warmup_steps=20)
-        study = optuna.create_study(sampler=sampler, pruner=pruner, direction="minimize", study_name=study_name)
-        study.optimize(objective, n_trials=n_trials, timeout=60 * max_minutes, show_progress_bar=True)
+        study = optuna.create_study(
+            sampler=sampler, pruner=pruner, direction="minimize", study_name=study_name
+        )
+        study.optimize(
+            objective,
+            n_trials=n_trials,
+            timeout=60 * max_minutes,
+            show_progress_bar=True,
+        )
 
         print("Hyper-Parameter Optimization successfully finished.")
         print("Number of finished trials: ", len(study.trials))
@@ -289,8 +353,9 @@ class xgboostlss:
         opt_param = study.best_trial
 
         # Add optimal stopping round
-        opt_param.params["opt_rounds"] = study.trials_dataframe()["user_attrs_opt_round"][
-            study.trials_dataframe()["value"].idxmin()]
+        opt_param.params["opt_rounds"] = study.trials_dataframe()[
+            "user_attrs_opt_round"
+        ][study.trials_dataframe()["value"].idxmin()]
         opt_param.params["opt_rounds"] = int(opt_param.params["opt_rounds"])
 
         print("  Value: {}".format(opt_param.value))
@@ -300,13 +365,19 @@ class xgboostlss:
 
         return opt_param.params
 
-
-    def predict(booster: xgb.Booster, dtest: xgb.DMatrix, dist: str, pred_type: str,
-                n_samples: int = 1000, quantiles: list = [0.1, 0.5, 0.9], seed: str = 123):
-        '''A customized xgboostlss prediction function.
+    def predict(
+        booster: xgb.Booster,
+        dtest: xgb.DMatrix,
+        dist: str,
+        pred_type: str,
+        n_samples: int = 1000,
+        quantiles: list = [0.1, 0.5, 0.9],
+        seed: str = 123,
+    ):
+        """A customized xgboostlsscm prediction function.
 
         booster: xgb.Booster
-            Trained XGBoostLSS-Model
+            Trained XGBoostLSSCM-Model
         X: xgb.DMatrix
             Test Data
         dist: str
@@ -324,7 +395,7 @@ class xgboostlss:
         seed: int
             If pred_type="response" specifies the seed for drawing samples from the predicted response distribution.
 
-        '''
+        """
 
         dict_param = dist.param_dict()
 
@@ -349,26 +420,36 @@ class xgboostlss:
             return dist_params_df
 
         elif pred_type == "response":
-            pred_resp_df = dist.pred_dist_rvs(pred_params = dist_params_df,
-                                              n_samples = n_samples,
-                                              seed = seed)
+            pred_resp_df = dist.pred_dist_rvs(
+                pred_params=dist_params_df, n_samples=n_samples, seed=seed
+            )
 
-            pred_resp_df.columns = [str("y_pred_sample_") + str(i) for i in range(pred_resp_df.shape[1])]
+            pred_resp_df.columns = [
+                str("y_pred_sample_") + str(i) for i in range(pred_resp_df.shape[1])
+            ]
             return pred_resp_df
 
         elif pred_type == "quantiles":
-            pred_quant_df = dist.pred_dist_quantile(quantiles = quantiles,
-                                                    pred_params = dist_params_df)
+            pred_quant_df = dist.pred_dist_quantile(
+                quantiles=quantiles, pred_params=dist_params_df
+            )
 
-            pred_quant_df.columns = [str("quant_") + str(quantiles[i]) for i in range(len(quantiles))]
+            pred_quant_df.columns = [
+                str("quant_") + str(quantiles[i]) for i in range(len(quantiles))
+            ]
             return pred_quant_df
 
-
-    def plot(booster: xgb.Booster, X: pd.DataFrame, feature: str = "x", parameter: str = "location", plot_type: str = "Partial_Dependence"):
-        '''A customized xgboostlss plotting function.
+    def plot(
+        booster: xgb.Booster,
+        X: pd.DataFrame,
+        feature: str = "x",
+        parameter: str = "location",
+        plot_type: str = "Partial_Dependence",
+    ):
+        """A customized xgboostlsscm plotting function.
 
         booster: xgb.Booster
-            Trained XGBoostLSS-Model
+            Trained XGBoostLSSCM-Model
         X: pd.DataFrame
             Train/Test Data
         feature: str
@@ -378,7 +459,7 @@ class xgboostlss:
         plot_type: str
             Specifies which SHapley-plot to visualize. Currently "Partial_Dependence" and "Feature_Importance" are supported.
 
-        '''
+        """
 
         shap.initjs()
         explainer = shap.TreeExplainer(booster)
@@ -394,20 +475,31 @@ class xgboostlss:
             param_pos = 3
 
         if plot_type == "Partial_Dependence":
-            shap.plots.scatter(shap_values[:, feature][:, param_pos], color=shap_values[:, :, param_pos])
+            shap.plots.scatter(
+                shap_values[:, feature][:, param_pos],
+                color=shap_values[:, :, param_pos],
+            )
         elif plot_type == "Feature_Importance":
-            shap.plots.bar(shap_values[:, :, param_pos], max_display = 15 if X.shape[1] > 15 else X.shape[1])
+            shap.plots.bar(
+                shap_values[:, :, param_pos],
+                max_display=15 if X.shape[1] > 15 else X.shape[1],
+            )
 
-
-
-    def expectile_plot(booster: xgb.Booster, X: pd.DataFrame, dist, feature: str = "x", expectile: str = "0.05", plot_type: str = "Partial_Dependence"):
-        '''A customized xgboostlss plotting function.
+    def expectile_plot(
+        booster: xgb.Booster,
+        X: pd.DataFrame,
+        dist,
+        feature: str = "x",
+        expectile: str = "0.05",
+        plot_type: str = "Partial_Dependence",
+    ):
+        """A customized xgboostlsscm plotting function.
 
         booster: xgb.Booster
-            Trained XGBoostLSS-Model
+            Trained XGBoostLSSCM-Model
         X: pd.DataFrame
             Train/Test Data
-        dist: xgboostlss.distributions class
+        dist: xgboostlsscm.distributions class
             Specifies distributional assumption
         feature: str
             Specifies which feature to use for plotting Partial_Dependence plot.
@@ -416,7 +508,7 @@ class xgboostlss:
         plot_type: str
             Specifies which SHapley-plot to visualize. Currently "Partial_Dependence" and "Feature_Importance" are supported.
 
-        '''
+        """
 
         shap.initjs()
         explainer = shap.TreeExplainer(booster)
@@ -425,6 +517,12 @@ class xgboostlss:
         expect_pos = dist.expectiles.index(float(expectile))
 
         if plot_type == "Partial_Dependence":
-            shap.plots.scatter(shap_values[:, feature][:, expect_pos], color=shap_values[:, :, expect_pos])
+            shap.plots.scatter(
+                shap_values[:, feature][:, expect_pos],
+                color=shap_values[:, :, expect_pos],
+            )
         elif plot_type == "Feature_Importance":
-            shap.plots.bar(shap_values[:, :, expect_pos], max_display = 15 if X.shape[1] > 15 else X.shape[1])
+            shap.plots.bar(
+                shap_values[:, :, expect_pos],
+                max_display=15 if X.shape[1] > 15 else X.shape[1],
+            )

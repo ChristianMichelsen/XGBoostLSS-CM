@@ -1,4 +1,4 @@
-"""XGBoostLSS - An extension of XGBoost to probabilistic forecasting"""
+"""XGBoostLSSCM - An extension of XGBoost to probabilistic forecasting"""
 
 from xgboostlsscm.distributions.Gaussian import *
 from xgboostlsscm.distributions.Gaussian_AutoGrad import *

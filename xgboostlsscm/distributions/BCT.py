@@ -4,9 +4,9 @@ import pandas as pd
 from scipy.stats import t, norm
 import math
 from scipy.special import gammaln, digamma, polygamma
-from xgboostlss.utils import *
+from xgboostlsscm.utils import *
 
-np.seterr(all="ignore") 
+np.seterr(all="ignore")
 
 ########################################################################################################################
 #################################################     BCT    ##########################################################

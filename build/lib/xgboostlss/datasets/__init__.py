@@ -1,1 +1,1 @@
-"""XGBoostLSS - An extension of XGBoost to probabilistic forecasting"""
+"""XGBoostLSSCM - An extension of XGBoostLSS"""

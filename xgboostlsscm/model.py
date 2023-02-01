@@ -4,13 +4,13 @@ import shap
 import xgboost as xgb
 from optuna.samplers import TPESampler
 
-from xgboostlss.distributions import *
-from xgboostlss.utils import *
+from xgboostlsscm.distributions import *
+from xgboostlsscm.utils import *
 
 
-class xgboostlss:
+class xgboostlsscm:
     """
-    XGBoostLSS model class
+    XGBoostLSSCM model class
 
     """
 
@@ -27,7 +27,7 @@ class xgboostlss:
         xgb_model=None,
         callbacks=None,
     ):
-        """Train a xgboostlss model with given parameters.
+        """Train a xgboostlsscm model with given parameters.
 
         Parameters
         ----------
@@ -35,7 +35,7 @@ class xgboostlss:
             Booster params.
         dtrain : DMatrix
             Data to be trained.
-        dist: xgboostlss.distributions class
+        dist: xgboostlsscm.distributions class
             Specifies distributional assumption.
         num_boost_round: int
             Number of boosting iterations.
@@ -134,7 +134,7 @@ class xgboostlss:
         callbacks=None,
         shuffle=True,
     ):
-        """Function to cross-validate a xgboostlss model with given parameters.
+        """Function to cross-validate a xgboostlsscm model with given parameters.
 
         Parameters
         ----------
@@ -142,7 +142,7 @@ class xgboostlss:
             Booster params.
         dtrain : DMatrix
             Data to be trained.
-        dist: xgboostlss.distributions class
+        dist: xgboostlsscm.distributions class
             Specifies distributional assumption.
         num_boost_round : int
             Number of boosting iterations.
@@ -242,7 +242,7 @@ class xgboostlss:
         early_stopping_rounds=20,
         max_minutes=10,
         n_trials=None,
-        study_name="XGBoostLSS-HyperOpt",
+        study_name="XGBoostLSSCM-HyperOpt",
         silence=False,
     ):
         """Function to tune hyperparameters using optuna.
@@ -253,7 +253,7 @@ class xgboostlss:
             Booster params in the form of "params_name": [min_val, max_val].
         dtrain : DMatrix
             Data to be trained.
-        dist: xgboostlss.distributions class
+        dist: xgboostlsscm.distributions class
             Specifies distributional assumption.
         num_boost_round : int
             Number of boosting iterations.
@@ -325,7 +325,7 @@ class xgboostlss:
                 trial, "test-NegLogLikelihood"
             )
 
-            xgblss_param_tuning = xgboostlss.cv(
+            xgblss_param_tuning = xgboostlsscm.cv(
                 hyper_params,
                 dtrain=dtrain,
                 dist=dist,
@@ -389,10 +389,10 @@ class xgboostlss:
         quantiles: list = [0.1, 0.5, 0.9],
         seed: str = 123,
     ):
-        """A customized xgboostlss prediction function.
+        """A customized xgboostlsscm prediction function.
 
         booster: xgb.Booster
-            Trained XGBoostLSS-Model
+            Trained XGBoostLSSCM-Model
         X: xgb.DMatrix
             Test Data
         dist: str
@@ -461,10 +461,10 @@ class xgboostlss:
         parameter: str = "location",
         plot_type: str = "Partial_Dependence",
     ):
-        """A customized xgboostlss plotting function.
+        """A customized xgboostlsscm plotting function.
 
         booster: xgb.Booster
-            Trained XGBoostLSS-Model
+            Trained XGBoostLSSCM-Model
         X: pd.DataFrame
             Train/Test Data
         feature: str
@@ -508,13 +508,13 @@ class xgboostlss:
         expectile: str = "0.05",
         plot_type: str = "Partial_Dependence",
     ):
-        """A customized xgboostlss plotting function.
+        """A customized xgboostlsscm plotting function.
 
         booster: xgb.Booster
-            Trained XGBoostLSS-Model
+            Trained XGBoostLSSCM-Model
         X: pd.DataFrame
             Train/Test Data
-        dist: xgboostlss.distributions class
+        dist: xgboostlsscm.distributions class
             Specifies distributional assumption
         feature: str
             Specifies which feature to use for plotting Partial_Dependence plot.

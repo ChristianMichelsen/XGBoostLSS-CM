@@ -5,7 +5,7 @@ import math
 from scipy.stats import nbinom, poisson
 import scipy.stats as stats
 from scipy.special import digamma
-from xgboostlss.utils import * 
+from xgboostlsscm.utils import *
 
 np.seterr(all="ignore")
 

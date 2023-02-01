@@ -2,12 +2,9 @@ import xgboost as xgb
 import numpy as np
 import pandas as pd
 from scipy.stats import norm
-import torch
-from torch.distributions import Normal
-from xgboostlss.utils import *
+from xgboostlsscm.utils import *
 
 np.seterr(all="ignore")
-
 
 ########################################################################################################################
 ###############################################      Gaussian      #####################################################
@@ -72,7 +69,7 @@ class Gaussian():
     def initialize(y: np.ndarray):
         """ Function that calculates the starting values, for each distributional parameter individually.
 
-        y_train: np.ndarray
+        y: np.ndarray
             Data from which starting values are calculated.
 
         """
@@ -87,6 +84,56 @@ class Gaussian():
 
 
     ###
+    # Location Parameter gradient and hessian
+    ###
+    @staticmethod
+    def gradient_location(y: np.ndarray, location: np.ndarray, scale: np.ndarray, weights: np.ndarray):
+        """Calculates Gradient of location parameter.
+
+        """
+        grad = (1/(scale**2)) * (y - location)
+        grad = stabilize_derivative(grad, Gaussian.stabilize)
+        grad = grad * (-1) * weights
+        return grad
+
+
+    @staticmethod
+    def hessian_location(scale: np.ndarray, weights: np.ndarray):
+        """Calculates Hessian of location parameter.
+
+        """
+        hes = -(1/(scale**2))
+        hes = stabilize_derivative(hes, Gaussian.stabilize)
+        hes = hes * (-1) * weights
+        return hes
+
+
+    ###
+    # Scale Parameter gradient and hessian
+    ###
+    @staticmethod
+    def gradient_scale(y: np.ndarray, location: np.ndarray, scale: np.ndarray, weights: np.ndarray):
+        """Calculates Gradient of scale parameter.
+
+        """
+        grad = ((y - location)**2 - scale**2)/(scale**3)
+        grad = stabilize_derivative(grad, Gaussian.stabilize)
+        grad = grad * (-1) * weights
+        return grad
+
+    @staticmethod
+    def hessian_scale(scale: np.ndarray, weights: np.ndarray):
+        """Calculates Hessian of scale parameter.
+
+        """
+        hes = -(2/(scale**2))
+        hes = stabilize_derivative(hes, Gaussian.stabilize)
+        hes = hes * (-1) * weights
+        return hes
+
+
+
+    ###
     # Custom Objective Function
     ###
     def Dist_Objective(predt: np.ndarray, data: xgb.DMatrix):
@@ -94,15 +141,12 @@ class Gaussian():
 
         """
 
-        target = torch.tensor(data.get_label())
+        target = data.get_label()
 
         # When num_class!= 0, preds has shape (n_obs, n_dist_param).
         # Each element in a row represents a raw prediction (leaf weight, hasn't gone through response function yet).
         preds_location = Gaussian.param_dict()["location"](predt[:, 0])
-        preds_location = torch.tensor(preds_location, requires_grad=True)
-
         preds_scale = Gaussian.param_dict()["scale"](predt[:, 1])
-        preds_scale = torch.tensor(preds_scale, requires_grad=True)
 
 
         # Weights
@@ -117,31 +161,24 @@ class Gaussian():
         grad = np.zeros(shape=(len(target), Gaussian.n_dist_param()))
         hess = np.zeros(shape=(len(target), Gaussian.n_dist_param()))
 
-        # Specify Metric for Auto Derivation
-        dGaussian = Normal(preds_location, preds_scale)
-        autograd_metric = -dGaussian.log_prob(target).nansum()
 
         # Location
-        grad[:, 0] = stabilize_derivative(auto_grad(metric=autograd_metric,
-                                                    parameter=preds_location,
-                                                    n=1)*weights,
-                                          Gaussian.stabilize)
+        grad[:, 0] = Gaussian.gradient_location(y=target,
+                                                location=preds_location,
+                                                scale=preds_scale,
+                                                weights=weights)
 
-        hess[:, 0] = stabilize_derivative(auto_grad(metric=autograd_metric,
-                                                    parameter=preds_location,
-                                                    n=2)*weights,
-                                          Gaussian.stabilize)
+        hess[:, 0] = Gaussian.hessian_location(scale=preds_scale,
+                                               weights=weights)
 
         # Scale
-        grad[:, 1] = stabilize_derivative(auto_grad(metric=autograd_metric,
-                                                    parameter=preds_scale,
-                                                    n=1)*weights,
-                                          Gaussian.stabilize)
+        grad[:, 1] = Gaussian.gradient_scale(y=target,
+                                             location=preds_location,
+                                             scale=preds_scale,
+                                             weights=weights)
 
-        hess[:, 1] = stabilize_derivative(auto_grad(metric=autograd_metric,
-                                                    parameter=preds_scale,
-                                                    n=2)*weights,
-                                          Gaussian.stabilize)
+        hess[:, 1] = Gaussian.hessian_scale(scale=preds_scale,
+                                            weights=weights)
 
         # Reshaping
         grad = grad.flatten()
@@ -157,20 +194,14 @@ class Gaussian():
         """A customized evaluation metric that evaluates the predictions using the negative log-likelihood.
 
         """
-        target = torch.tensor(data.get_label())
+        target = data.get_label()
 
         # Using a custom objective function, the custom metric receives raw predictions which need to be transformed
         # with the corresponding response function.
         preds_location = Gaussian.param_dict()["location"](predt[:, 0])
-        preds_location = torch.tensor(preds_location, requires_grad=True)
-
         preds_scale = Gaussian.param_dict()["scale"](predt[:, 1])
-        preds_scale = torch.tensor(preds_scale, requires_grad=True)
 
-        dGaussian = Normal(preds_location, preds_scale)
-        nll = -dGaussian.log_prob(target).nansum()
-        nll = nll.detach().numpy()
-        nll = np.round(nll, 5)
+        nll = -np.nansum(norm.logpdf(x=target, loc=preds_location, scale=preds_scale))
 
         return "NegLogLikelihood", nll
 
@@ -196,10 +227,11 @@ class Gaussian():
         pred_dist_list = []
 
         for i in range(pred_params.shape[0]):
-            rGaussian = Normal(loc=torch.tensor(pred_params.loc[i,"location"]),
-                               scale=torch.tensor(pred_params.loc[i,"scale"]))
-            r_samples = rGaussian.sample((n_samples,))
-            pred_dist_list.append(r_samples.detach().numpy())
+            pred_dist_list.append(norm.rvs(loc=pred_params.loc[i,"location"],
+                                           scale=pred_params.loc[i,"scale"],
+                                           size=n_samples,
+                                           random_state=seed)
+                                  )
 
         pred_dist = pd.DataFrame(pred_dist_list)
         return pred_dist
@@ -221,16 +253,13 @@ class Gaussian():
         pd.DataFrame with calculated quantiles.
 
         """
-        qGaussian = Normal(loc=torch.tensor(pred_params["location"]),
-                           scale=torch.tensor(pred_params["scale"]))
-
         pred_quantiles_list = []
 
         for i in range(len(quantiles)):
-            q = qGaussian.icdf(torch.tensor(quantiles[i]))
-            q = q.detach().numpy()
-            pred_quantiles_list.append(q)
+            pred_quantiles_list.append(norm.ppf(quantiles[i],
+                                                loc = pred_params["location"],
+                                                scale = pred_params["scale"])
+                                       )
 
         pred_quantiles = pd.DataFrame(pred_quantiles_list).T
         return pred_quantiles
-
