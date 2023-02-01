@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "xgboostlsscm"
+version = "0.1.0"
+description = "XGBoostLSS-CM - An extension of XGBoostLSS"
+authors = ["Christian Michelsen <christianmichelsen@gmail.com>"]
+license = "Apache Licence 2.0"
+readme = "README.md"
+packages = [{include = "xgboostlsscm"}]
+
+[tool.poetry.dependencies]
+python = "<3.12,>=3.8"
+xgboost = "^1.7.3"
+optuna = "^3.1.0"
+shap = "^0.41.0"
+scipy = "^1.10.0"
+pandas = "^1.5.3"
+
+
+[tool.poetry.group.dev.dependencies]
+matplotlib = "^3.6.3"
+plotnine = "^0.10.1"
+ipykernel = "^6.20.2"
+ipywidgets = "^8.0.4"
+black = {version = "^23.1.0", allow-prereleases = true}
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

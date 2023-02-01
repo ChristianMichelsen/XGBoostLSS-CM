@@ -218,7 +218,7 @@ class xgboostlsscm:
             stratified=stratified,
             folds=folds,
             obj=dist.Dist_Objective,
-            custom_metric=dist.Dist_Metric
+            custom_metric=dist.Dist_Metric,
             #feval=dist.Dist_Metric,
             maximize=False,
             early_stopping_rounds=early_stopping_rounds,

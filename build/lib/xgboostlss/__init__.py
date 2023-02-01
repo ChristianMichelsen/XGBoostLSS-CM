@@ -1,1 +1,0 @@
-"""XGBoostLSSCM - An extension of XGBoostLSS"""
