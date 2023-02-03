@@ -219,7 +219,7 @@ class xgboostlsscm:
             folds=folds,
             obj=dist.Dist_Objective,
             custom_metric=dist.Dist_Metric,
-            #feval=dist.Dist_Metric,
+            # feval=dist.Dist_Metric,
             maximize=False,
             early_stopping_rounds=early_stopping_rounds,
             fpreproc=fpreproc,
@@ -281,7 +281,6 @@ class xgboostlsscm:
         """
 
         def objective(trial):
-
             hyper_params = {
                 "booster": "gbtree",
                 "eta": trial.suggest_float(
@@ -388,6 +387,7 @@ class xgboostlsscm:
         n_samples: int = 1000,
         quantiles: list = [0.1, 0.5, 0.9],
         seed: str = 123,
+        quantile_string_decimals: int = 2,
     ):
         """A customized xgboostlsscm prediction function.
 
@@ -436,7 +436,9 @@ class xgboostlsscm:
 
         elif pred_type == "response":
             pred_resp_df = dist.pred_dist_rvs(
-                pred_params=dist_params_df, n_samples=n_samples, seed=seed
+                pred_params=dist_params_df,
+                n_samples=n_samples,
+                seed=seed,
             )
 
             pred_resp_df.columns = [
@@ -446,12 +448,17 @@ class xgboostlsscm:
 
         elif pred_type == "quantiles":
             pred_quant_df = dist.pred_dist_quantile(
-                quantiles=quantiles, pred_params=dist_params_df
+                quantiles=quantiles,
+                pred_params=dist_params_df,
             )
 
             pred_quant_df.columns = [
-                str("quant_") + str(quantiles[i]) for i in range(len(quantiles))
+                f"quant_{q:.{quantile_string_decimals}f}" for q in quantiles
             ]
+
+            # pred_quant_df.columns = [
+            #    str("quant_") + str(quantiles[i]) for i in range(len(quantiles))
+            # ]
             return pred_quant_df
 
     def plot(

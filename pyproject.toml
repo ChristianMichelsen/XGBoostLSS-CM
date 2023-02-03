@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "xgboostlsscm"
-version = "0.1.0"
+version = "0.2.0"
 description = "XGBoostLSS-CM - An extension of XGBoostLSS"
 authors = ["Christian Michelsen <christianmichelsen@gmail.com>"]
 license = "Apache Licence 2.0"
